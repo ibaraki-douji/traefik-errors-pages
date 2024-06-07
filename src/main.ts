@@ -45,7 +45,7 @@ import { join } from "path";
     
             if (redirect && currentHost === redirect.host && currentStatus === redirect.status) {
                 if (redirect.redirectHost) {
-                    res.end(`<html><head><meta http-equiv="refresh" content="0; url=${redirect.scheme}://${redirect.redirectHost}${redirect.redirectPath}"></head><body><a href="${redirect.scheme}://${redirect.redirectHost}${redirect.redirectPath}">Click here if you are not redirected</a></body></html>`);
+                    res.end(`<html><head><meta http-equiv="refresh" content="0; url=${redirect.scheme || req.headers['x-forwarded-proto'] || 'http'}://${redirect.redirectHost}${redirect.redirectPath}"></head><body><a href="${redirect.scheme}://${redirect.redirectHost}${redirect.redirectPath}">Click here if you are not redirected</a></body></html>`);
                 } else if (redirect.redirectPath) {
                     res.end(`<html><head><meta http-equiv="refresh" content="0; url=${redirect.redirectPath}"></head><body><a href="$${redirect.redirectPath}">Click here if you are not redirected</a></body></html>`);
                 } else {
