@@ -1,0 +1,11 @@
+{
+    "reverseProxies": {
+        "404": {
+            "*": {
+                "proxyHost": "web",
+                "proxyPath": "/",
+                "sheme": "http"
+            }
+        }
+    }
+}

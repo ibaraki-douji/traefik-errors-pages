@@ -1,0 +1,23 @@
+services:
+  traefik:
+    extends:
+      file: docker-compose.yml
+      service: traefik
+  web:
+    extends:
+      file: docker-compose.yml
+      service: web
+  web2:
+    extends:
+      file: docker-compose.yml
+      service: web2
+  errors:
+    extends:
+      file: docker-compose.yml
+      service: errors
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+networks:
+  web:

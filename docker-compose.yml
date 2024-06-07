@@ -1,0 +1,54 @@
+services:
+  traefik:
+    image: traefik:latest
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.middlewares=mid-errors"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.api.service=api@internal"
+      - "traefik.http.routers.api.entrypoints=web"
+  web:
+    image: nginx:alpine
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.web.rule=Host(`web.localhost`)"
+      - "traefik.http.routers.web.entrypoints=web"
+    networks:
+      - web
+  web2:
+    image: nginx:alpine
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.web2.rule=Host(`web2.localhost`)"
+      - "traefik.http.routers.web2.entrypoints=web"
+    networks:
+      - web
+  errors:
+    image: docker.ibaraki.app/traefik/errors:latest
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.errors.rule=HostRegexp(`{host:.+}`)"
+      - "traefik.http.routers.errors.entrypoints=web"
+      - "traefik.http.services.errors.loadbalancer.server.port=3000"
+      - "traefik.http.middlewares.mid-errors.errors.status=404"
+      - "traefik.http.middlewares.mid-errors.errors.service=errors@docker"
+      - "traefik.http.middlewares.mid-errors.errors.query=/{status}"
+    volumes:
+      - "./config.json:/config.json:ro"
+      - "./pages:/pages:ro"
+    networks:
+      - web
+
+networks:
+  web:
