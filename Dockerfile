@@ -1,4 +1,4 @@
-FROM node:18 as build
+FROM node:alpine as build
 
 # Create app directory
 WORKDIR /usr/src/app
@@ -14,7 +14,7 @@ COPY ./src ./src
 
 RUN npm run build
 
-FROM node:18 as production
+FROM node:alpine as production
 
 # Create app directory
 WORKDIR /usr/src/app
@@ -26,10 +26,6 @@ RUN npm install --only=production
 
 # Bundle app source
 COPY --from=build /usr/src/app/lib ./lib
-
-FROM scratch as final
-
-COPY --from=production / /
 
 WORKDIR /usr/src/app
 
