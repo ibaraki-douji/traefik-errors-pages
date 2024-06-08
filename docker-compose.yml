@@ -38,8 +38,9 @@ services:
     image: docker.ibaraki.app/traefik/errors:latest
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.errors.rule=HostRegexp(`{host:.+}`)"
+      - "traefik.http.routers.errors.rule=HostRegexp(`.+`)"
       - "traefik.http.routers.errors.entrypoints=web"
+      - "traefik.http.routers.errors.priority=-1"
       - "traefik.http.services.errors.loadbalancer.server.port=3000"
       - "traefik.http.middlewares.mid-errors.errors.status=404"
       - "traefik.http.middlewares.mid-errors.errors.service=errors@docker"
