@@ -1,7 +1,7 @@
-import Console, { Color } from "@ibaraki-douji/console";
+import Console from "@ibaraki-douji/console";
 import { createServer } from "http"
 import { Config, PageConfig } from "./Config";
-import { ParseInt, StatusCode } from "./Utils";
+import { StatusCode } from "./Utils";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -18,8 +18,10 @@ import { join } from "path";
 
     const http = createServer((req, res) => {
 
-        const serviceErrorCode = req.url.split('/')[1];
+        const serviceErrorCode = isNaN(+(req.url.split('/')[1] || 'no')) ? '404' : req.url.split('/')[1];
         const serviceHost = req.headers.host;
+
+        if (isNaN(+(req.url.split('/')[1] || 'no'))) Console.warn('No error code provided, defaulting to 404');
 
         const proxyPass = pages.getReverseProxy(serviceErrorCode as StatusCode, serviceHost) || pages.getReverseProxy(serviceErrorCode as StatusCode);
         const redirect = pages.getRedirect(serviceErrorCode as StatusCode, serviceHost) || pages.getRedirect(serviceErrorCode as StatusCode);
@@ -39,7 +41,7 @@ import { join } from "path";
                 lib.get(`${proxyPass.sheme}://${proxyPass.proxyHost}${proxyPass.proxyPath}`, (response) => {
                     response.pipe(res);
                 });
-                Console.info(`Proxying: ${currentHost} ${currentStatus} -> ${proxyPass.proxyHost}${proxyPass.proxyPath}`);
+                Console.info(`Proxying: ${serviceHost} ${serviceErrorCode} > ${currentHost} ${currentStatus} -> ${proxyPass.proxyHost}${proxyPass.proxyPath}`);
                 return;
             }
     
@@ -52,18 +54,17 @@ import { join } from "path";
                     res.end('Invalid configuration');
                     throw new Error('Invalid redirect configuration, missing redirectHost or redirectPath');
                 }
-                Console.info(`Redirecting: ${currentHost} ${currentStatus} -> ${redirect.redirectHost || ''}${redirect.redirectPath || ''}`);
+                Console.info(`Redirecting: ${serviceHost} ${serviceErrorCode} > ${currentHost} ${currentStatus} -> ${redirect.redirectHost || ''}${redirect.redirectPath || ''}`);
                 return;
             }
     
             if (page && currentHost === page.host && currentStatus === page.status) {
                 res.end(readFileSync(join(Config.PAGE_PATH, page.page)));
-                Console.info(`Serving page: ${currentHost} ${currentStatus} -> ${page.page}`);
+                Console.info(`Serving page: ${serviceHost} ${serviceErrorCode} > ${currentHost} ${currentStatus} -> ${page.page}`);
                 return;
             }
         }
 
-        res.writeHead(+serviceErrorCode, { 'Content-Type': 'text/plain' });
         res.end(`Service Error: ${serviceErrorCode} on ${serviceHost}`);
 
     });
